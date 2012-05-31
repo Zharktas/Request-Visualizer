@@ -1,13 +1,17 @@
 var express = require('express');
 var app = express.createServer();
 
-var visualizer = require('./Request-Visualizer.js');
+var visualizer = require('./lib/Request-Visualizer.js');
 
 app.use(visualizer.log);
 
-app.get('/', function(req, res){
-	res.send("Request logged.");
+app.get('/demo.json', function(req, res){
+	visualizer.all(req, res);
 });
+
+function results(docs){
+	console.log(docs);
+}
 
 app.listen(9000);
 

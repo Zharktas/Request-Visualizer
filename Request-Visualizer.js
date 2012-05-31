@@ -20,7 +20,7 @@ var RequestModel = mongoose.model('Request', Request);
 module.exports.log = function(req, res, next ){
 	
 	process.nextTick(function(){
-		var ip = req.header('x-forwarded-for');
+		var ip = req.headers['x-forwarded-for'];
 		var geo = geoip.lookup(ip);
 		var request = new RequestModel();
 		request.path = url.parse(req.url);
@@ -34,4 +34,10 @@ module.exports.log = function(req, res, next ){
 		});
 	});
 	next();
+}
+
+module.exports.all = function(req, res){
+	RequestModel.find({}, function(err, docs){
+		res.json(docs);
+	});
 }

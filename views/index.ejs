@@ -1,2 +1,82 @@
-<h1><%= title %></h1>
-<p>Welcome to <%= title %></p>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+<div id="map_canvas"></div>
+<input type="range" id="seekbar">
+<div id="time"></div>
+
+<script type="text/javascript">
+	var map;
+	var seekbar = document.getElementById("seekbar");
+	seekbar.min = <%= seekbarmin %>;
+	seekbar.max = <%= seekbarmax %>;
+	$("#time").text(new Date(parseInt(seekbar.value)));
+	seekbar.onchange = function(){
+		$("#time").text(new Date(parseInt(seekbar.value)));
+	}
+	
+	var markers = [];
+	function getRequests(){
+		$.getJSON("requests", function(data){
+			console.log(data);
+					
+			for ( var i = 0; i < data.length; ++i ){
+				
+				var str = "<div class='UrlList'>";
+				if ( data[i].value.paths ){
+					for ( var j = 0; j < data[i].value.paths.length; ++j ){
+						if ( data[i].value.paths[j] ){
+							str += data[i].value.paths[j].path + '<br/>'
+						}
+					}
+					
+					str += "</div>"
+					var infowindow = new google.maps.InfoWindow({
+						content: ''
+					 });
+					
+					var LatLng = new google.maps.LatLng(data[i].value.ll[0],data[i].value.ll[1]);
+					var marker = getMarker(LatLng);
+					if ( marker == null ){
+						marker = new google.maps.Marker({
+							position: LatLng,
+							map: map
+						});
+						
+						marker.html = '';
+						markers.push(marker);
+					}	
+					marker.html += '<div><h2>' + data[i]._id + '</h2>' + str + '</div>';
+					
+					google.maps.event.addListener(marker, 'click', function(){
+						infowindow.setContent(this.html);
+						infowindow.open(map, this);
+					});
+				}
+			}
+		});
+	}
+	
+	function getMarker(LatLng){
+		for( var i in markers ){
+			if ( markers[i].getPosition().equals(LatLng) ){
+				return markers[i];
+			}
+		}
+		
+		return null;
+	}
+	
+	function initialize(){
+		var myOptions = {
+			zoom: 2,
+			center: new google.maps.LatLng(45, 45),
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+				
+		map = new google.maps.Map(document.getElementById('map_canvas'), myOptions);
+		getRequests();
+	}
+			
+	google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+

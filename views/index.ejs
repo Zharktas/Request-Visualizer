@@ -3,6 +3,7 @@
 <div id="map_canvas"></div>
 <input type="range" id="seekbar">
 <div id="time"></div>
+<input type="text" placeholder="Filter.." id="filter"/><span onclick="getRequests($('#filter').val())">Submit</span>
 
 <script type="text/javascript">
 	var map;
@@ -15,8 +16,18 @@
 	}
 	
 	var markers = [];
-	function getRequests(){
-		$.getJSON("requests", function(data){
+	function getRequests(filter){
+		if (!filter){
+			filter = "";
+		}
+		$.getJSON("requests?filter=" + filter, function(data){
+			
+			for ( var i = 0; i < markers.length; ++i ){
+				markers[i].setMap(null);
+			}
+			
+			markers.length = 0;
+			
 			console.log(data);
 					
 			for ( var i = 0; i < data.length; ++i ){

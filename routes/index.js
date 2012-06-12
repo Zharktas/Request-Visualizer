@@ -30,6 +30,8 @@ exports.index = function(req, res){
 
 exports.requests = function(req, res){
 	
+	var filter = req.param("filter");
+	console.log(filter);
 	var o = {};
 	var m = function(){
 		if ( this.location.geo ){
@@ -56,10 +58,12 @@ exports.requests = function(req, res){
 	o.out = {replace: "pathsasdasd"};
 	o.verbose = true;
 	
+	var regex = new RegExp(".*" + filter + ".*");
+	console.log(regex);
 	RequestModel.mapReduce(o, function(err, model, stats){
 		console.log('map reduce took %d ms', stats.processtime)
 		
-		model.find({}, function(err, docs){
+		model.find({}).regex("value.paths.path", regex).exec(function(err, docs){
 			res.json(docs);
 		});
 	});

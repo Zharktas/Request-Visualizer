@@ -1,5 +1,6 @@
 
 var mongoose = require('mongoose');
+var util = require('util');
 
 mongoose.connect('mongodb://localhost/Request-Visualizer');
 
@@ -35,11 +36,12 @@ exports.requests = function(req, res){
 	var o = {};
 	var m = function(){
 		if ( this.location.geo ){
-			emit(this.location.ip, { ll: this.location.geo.ll, path: this.path });
+			emit(this.location.ip, { ll: this.location.geo.ll, paths: [ this.path ]});
 		}
 	}
 	
 	var r = function(key, values){
+		
 		var location = {
 			ll: null,
 			paths: []
@@ -47,7 +49,9 @@ exports.requests = function(req, res){
 		
 		values.forEach(function(loc){
 			location.ll = loc.ll;
-			location.paths.push(loc.path);
+			loc.paths.forEach(function(path){
+				location.paths.push(path);
+			})
 		});
 		
 		return location;
@@ -55,13 +59,17 @@ exports.requests = function(req, res){
 	
 	o.map = m;
 	o.reduce = r;
-	o.out = {replace: "pathsasdasd"};
+	o.out = {replace: "paths"};
 	o.verbose = true;
 	
 	var regex = new RegExp(".*" + filter + ".*");
 	console.log(regex);
 	RequestModel.mapReduce(o, function(err, model, stats){
 		console.log('map reduce took %d ms', stats.processtime)
+		
+		model.find({"_id": "130.230.209.73"}, function(err, docs){
+			console.log(docs[0].value);
+		});
 		
 		model.find({}).regex("value.paths.path", regex).exec(function(err, docs){
 			res.json(docs);
